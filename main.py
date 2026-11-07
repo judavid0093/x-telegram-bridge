@@ -13,35 +13,44 @@ STATE_FILE = Path("state.json")
 BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
-
 def fetch_feed():
     request = urllib.request.Request(
         FEED_URL,
-        headers={"User-Agent": "Mozilla/5.0"}
+        headers={
+            "User-Agent": "Mozilla/5.0 (compatible; XTelegramBridge/1.0)",
+            "Accept": "application/rss+xml, application/xml, text/xml"
+        }
     )
 
-    with urllib.request.urlopen(request, timeout=30) as response:
-        root = ET.fromstring(response.read())
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            xml_data = response.read()
 
-    items = root.findall(".//item")
-    entries = []
+        root = ET.fromstring(xml_data)
 
-    for item in items:
-        link = (item.findtext("link") or "").strip()
-        guid = (item.findtext("guid") or link).strip()
-        title = html.unescape(
-            (item.findtext("title") or "Nueva publicación").strip()
-        )
+        items = root.findall(".//item")
+        entries = []
 
-        if link and guid:
-            entries.append({
-                "id": guid,
-                "title": title,
-                "link": link
-            })
+        for item in items:
+            link = (item.findtext("link") or "").strip()
+            guid = (item.findtext("guid") or link).strip()
+            title = html.unescape(
+                (item.findtext("title") or "Nueva publicación").strip()
+            )
 
-    return entries
+            if link and guid:
+                entries.append({
+                    "id": guid,
+                    "title": title,
+                    "link": link
+                })
 
+        print(f"Feed descargado correctamente: {len(entries)} publicaciones")
+        return entries
+
+    except Exception as e:
+        print(f"ERROR AL DESCARGAR EL FEED: {type(e).__name__}: {e}")
+        raise
 
 def load_state():
     if not STATE_FILE.exists():
