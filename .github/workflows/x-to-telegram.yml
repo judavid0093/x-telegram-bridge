@@ -36,6 +36,8 @@ jobs:
       - name: Save publication state
         if: success()
         run: |
+          set -eux
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -43,6 +45,7 @@ jobs:
 
           if ! git diff --cached --quiet; then
             git commit -m "Update X publication state"
-            git pull --rebase origin main
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           fi
