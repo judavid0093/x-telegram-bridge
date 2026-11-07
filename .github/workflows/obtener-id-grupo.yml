@@ -1,0 +1,50 @@
+name: Obtener ID del grupo Telegram
+
+on:
+  workflow_dispatch:
+
+jobs:
+  obtener-id:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Consultar grupo
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          python - <<'PY'
+          import os
+          import requests
+
+          token = os.environ["BOT_TOKEN"]
+          url = f"https://api.telegram.org/bot{token}/getUpdates"
+
+          response = requests.get(
+              url,
+              params={"timeout": 0},
+              timeout=20
+          )
+          data = response.json()
+
+          if not data.get("ok"):
+              print("Error consultando Telegram:", data)
+              raise SystemExit(1)
+
+          encontrados = set()
+
+          for update in data.get("result", []):
+              msg = update.get("message") or update.get("channel_post")
+              if not msg:
+                  continue
+
+              chat = msg.get("chat", {})
+              if chat.get("type") in ("group", "supergroup"):
+                  encontrados.add((chat.get("id"), chat.get("title")))
+
+          if encontrados:
+              for chat_id, title in encontrados:
+                  print(f"Grupo: {title} | ID: {chat_id}")
+          else:
+              print("No se encontraron mensajes de grupos.")
+              print("Envía otro mensaje al grupo y ejecuta nuevamente.")
+          PY
