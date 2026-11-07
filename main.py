@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 FEED_URL = "https://fxtwitter.com/tothonoo/feed.xml"
+print("URL DEL FEED:", FEED_URL)
 STATE_FILE = Path("state.json")
 
 BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
@@ -47,9 +48,10 @@ def fetch_feed():
 
         print(f"Feed descargado correctamente: {len(entries)} publicaciones")
         return entries
-
-    except Exception as e:
-        print(f"ERROR AL DESCARGAR EL FEED: {type(e).__name__}: {e}")
+    except urllib.error.HTTPError as e:
+        print("ERROR HTTP:", e.code)
+        print("URL SOLICITADA:", e.url)
+        print("RESPUESTA:", e.read().decode("utf-8", errors="replace")[:1000])
         raise
 
 def load_state():
