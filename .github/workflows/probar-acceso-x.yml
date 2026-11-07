@@ -1,0 +1,62 @@
+name: Probar acceso API X
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comprobar API de X
+        env:
+          X_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+        run: |
+          python - <<'PY'
+          import os
+          import requests
+
+          headers = {
+              "Authorization": f"Bearer {os.environ['X_TOKEN']}"
+          }
+
+          base = "https://api.x.com/2"
+
+          def probar(nombre, url):
+              try:
+                  r = requests.get(
+                      url,
+                      headers=headers,
+                      timeout=30
+                  )
+                  print(f"\n{nombre}: HTTP {r.status_code}")
+
+                  try:
+                      data = r.json()
+                      if r.ok:
+                          print("Acceso correcto.")
+                          if "data" in data:
+                              print("Publicaciones encontradas:",
+                                    len(data["data"]))
+                      else:
+                          print("Respuesta:", data.get("detail",
+                                data.get("title", data)))
+                  except Exception:
+                      print("Respuesta no JSON.")
+              except Exception as e:
+                  print(f"{nombre}: Error de conexión: {e}")
+
+          probar(
+              "Perfil @tothonoo",
+              f"{base}/users/by/username/tothonoo"
+          )
+
+          probar(
+              "Lista 1855938515395051530",
+              f"{base}/lists/1855938515395051530/tweets?max_results=5"
+          )
+
+          probar(
+              "Lista 1998969343120482610",
+              f"{base}/lists/1998969343120482610/tweets?max_results=5"
+          )
+          PY
