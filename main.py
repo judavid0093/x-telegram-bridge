@@ -64,14 +64,13 @@ def fetch_feed():
             data = response.read()
             print("Estado HTTP:", response.status)
             print("URL final:", response.geturl())
-            print("Respuesta:", data[:500].decode("utf-8", errors="replace"))
             root = ET.fromstring(data)
 
     except urllib.error.HTTPError as e:
         print("Error HTTP:", e.code)
         print("URL:", e.url)
         print("Respuesta:", e.read(1000).decode("utf-8", errors="replace"))
-    raise
+        raise
 
     entries = []
 
@@ -82,7 +81,6 @@ def fetch_feed():
         media_url = ""
         media_type = ""
 
-        # Busca archivos adjuntos en enclosure y Media RSS.
         for element in item.iter():
             tag = element.tag.split("}")[-1].lower()
 
@@ -104,7 +102,6 @@ def fetch_feed():
 
     print(f"Publicaciones multimedia encontradas: {len(entries)}")
     return entries
-
 
 def send_telegram(entry, caption):
     media_url = entry["media_url"]
