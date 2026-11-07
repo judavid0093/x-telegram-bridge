@@ -48,6 +48,7 @@ def fetch_feed():
 
         print(f"Feed descargado correctamente: {len(entries)} publicaciones")
         return entries
+        
     except urllib.error.HTTPError as e:
         print("ERROR HTTP:", e.code)
         print("URL SOLICITADA:", e.url)
