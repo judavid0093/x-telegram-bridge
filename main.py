@@ -52,25 +52,43 @@ def load_state():
 
     return state
 
-
 def fetch_feed():
-    request = urllib.request.Request(
-        FEED_URL,
-        headers={"User-Agent": "Mozilla/5.0"}
-    )
+    urls = [
+        "https://fxtwitter.com/tothonoo/media.xml",
+        "https://fixupx.com/tothonoo/media.xml"
+    ]
 
-    try:
-        with urllib.request.urlopen(request, timeout=60) as response:
-            data = response.read()
-            print("Estado HTTP:", response.status)
-            print("URL final:", response.geturl())
-            root = ET.fromstring(data)
+    root = None
 
-    except urllib.error.HTTPError as e:
-        print("Error HTTP:", e.code)
-        print("URL:", e.url)
-        print("Respuesta:", e.read(1000).decode("utf-8", errors="replace"))
-        raise
+    for url in urls:
+        for attempt in range(3):
+            try:
+                request = urllib.request.Request(
+                    url,
+                    headers={"User-Agent": "Mozilla/5.0"}
+                )
+
+                with urllib.request.urlopen(request, timeout=60) as response:
+                    data = response.read()
+                    root = ET.fromstring(data)
+
+                print(f"Feed conectado correctamente: {url}")
+                break
+
+            except Exception as e:
+                print(
+                    f"Intento {attempt + 1}/3 fallido "
+                    f"en {url}: {e}"
+                )
+                time.sleep(5)
+
+        if root is not None:
+            break
+
+    if root is None:
+        raise RuntimeError(
+            "No se pudo conectar con ningún feed multimedia."
+        )
 
     entries = []
 
@@ -101,7 +119,9 @@ def fetch_feed():
             })
 
     print(f"Publicaciones multimedia encontradas: {len(entries)}")
+
     return entries
+
 
 def send_telegram(entry, caption):
     media_url = entry["media_url"]
