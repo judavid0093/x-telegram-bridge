@@ -59,8 +59,19 @@ def fetch_feed():
         headers={"User-Agent": "Mozilla/5.0"}
     )
 
-    with urllib.request.urlopen(request, timeout=60) as response:
-        root = ET.fromstring(response.read())
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            data = response.read()
+            print("Estado HTTP:", response.status)
+            print("URL final:", response.geturl())
+            print("Respuesta:", data[:500].decode("utf-8", errors="replace"))
+            root = ET.fromstring(data)
+
+    except urllib.error.HTTPError as e:
+        print("Error HTTP:", e.code)
+        print("URL:", e.url)
+        print("Respuesta:", e.read(1000).decode("utf-8", errors="replace"))
+    raise
 
     entries = []
 
