@@ -2,8 +2,6 @@
 name: X to Telegram
 
 on:
-  schedule:
-    - cron: "4,9,14,19,24,29,34,39,44,49,54,59 * * * *"
   workflow_dispatch:
 
 permissions:
